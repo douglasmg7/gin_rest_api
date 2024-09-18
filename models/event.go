@@ -1,18 +1,25 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type Event struct {
 	ID          int
-	Name        string
-	Description string
-	Place       string
-	DateTime    time.Time
+	Name        string    `binding:"required"`
+	Description string    `binding:"required"`
+	Place       string    `binding:"required"`
+	DateTime    time.Time `binding:"required"`
 	UserID      int
 }
 
-var events = []*Event{}
+var events = []Event{}
 
-func (e *Event) Save() {
+func (e Event) Save() {
 	events = append(events, e)
+}
+
+func GetAllEvents() []Event {
+	// fmt.Println(events)
+	return events
 }
