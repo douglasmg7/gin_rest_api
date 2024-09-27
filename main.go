@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/douglasmg7/gin_rest_api.git/db"
 	"github.com/douglasmg7/gin_rest_api.git/models"
@@ -12,13 +13,27 @@ func main() {
 	db.InitDb()
 	server := gin.Default()
 	server.GET("/events", getEvents)
+	server.GET("/events/:id", getEvent)
 	server.POST("/events", createEvent)
 
 	server.Run(":8080")
 }
 
 func getEvents(c *gin.Context) {
-	c.JSON(http.StatusOK, models.GetAllEvents())
+	events, err := models.GetAllEvents()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch events, try again latter."})
+		return
+	}
+	c.JSON(http.StatusOK, events)
+}
+
+func getEvent(c *gin.Context) {
+	eventId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event id."})
+		return
+	}
 }
 
 func createEvent(c *gin.Context) {
@@ -30,6 +45,10 @@ func createEvent(c *gin.Context) {
 	}
 	event.ID = 1
 	event.UserID = 1
-	event.Save()
+	err = event.Save()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not save the event, try again latter."})
+		return
+	}
 	c.JSON(http.StatusCreated, gin.H{"message": "event created", "event": event})
 }
