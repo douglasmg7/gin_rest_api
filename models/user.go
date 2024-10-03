@@ -1,7 +1,10 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/douglasmg7/gin_rest_api.git/db"
+	"github.com/douglasmg7/gin_rest_api.git/utils"
 )
 
 type User struct {
@@ -10,14 +13,20 @@ type User struct {
 	Password string `binding: "required"`
 }
 
-func (u User) Save() error {
+func (u *User) Save() error {
 	query := ` INSERT INTO users (email, password) VALUES(?, ?)`
 	stmt, err := db.DB.Prepare(query)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	result, err := stmt.Exec(u.Email, u.Password)
+
+	hashedPassword, err := utils.HashPassword(u.Password)
+	if err != nil {
+		return err
+	}
+
+	result, err := stmt.Exec(u.Email, hashedPassword)
 	if err != nil {
 		return err
 	}
@@ -27,4 +36,20 @@ func (u User) Save() error {
 	u.ID = id
 
 	return err
+}
+
+func (u *User) ValidateCredentials() error {
+	query := "SELECT id, password FROM users WHERE email = ?"
+	row := db.DB.QueryRow(query, u.Email)
+
+	var retrivedPassword string
+	err := row.Scan(&u.ID, &retrivedPassword)
+	if err != nil {
+		return errors.New("Credentials invalid")
+	}
+
+	if utils.CheckPassword(u.Password, retrivedPassword) {
+		return nil
+	}
+	return errors.New("Credentials invalid")
 }

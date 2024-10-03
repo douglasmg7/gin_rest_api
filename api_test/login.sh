@@ -1,4 +1,4 @@
-curl localhost:8080/signup -i --json '{
+curl localhost:8080/login -i --json '{
     "email": "test@test.com", 
     "password": "test"
 }' 

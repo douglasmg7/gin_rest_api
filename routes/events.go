@@ -33,14 +33,25 @@ func getEvent(c *gin.Context) {
 }
 
 func createEvent(c *gin.Context) {
+	// token := c.Request.Header.Get("Authorization")
+	// if token == "" {
+	// c.JSON(http.StatusUnauthorized, gin.H{"message": "not authorized"})
+	// return
+	// }
+
+	// userId, err := utils.VerifyToken(token)
+	// if err != nil {
+	// c.JSON(http.StatusUnauthorized, gin.H{"message": "not authorized"})
+	// return
+	// }
+
 	var event models.Event
 	err := c.ShouldBindJSON(&event)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
-	event.ID = 1
-	event.UserID = 1
+	event.UserID = c.GetInt64("userId")
 	err = event.Save()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not save the event, try again latter."})
